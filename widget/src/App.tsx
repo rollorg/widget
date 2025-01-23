@@ -7,7 +7,7 @@ function App() {
     <>
       <Routes>
         <Route path="/" element={<Changelogs />} />
-        <Route path="/:id" element={<ChangelogDetails />} />
+        <Route path="/:changelogId" element={<ChangelogDetails />} />
       </Routes>
     </>
   );

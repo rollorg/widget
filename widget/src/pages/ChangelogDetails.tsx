@@ -1,51 +1,63 @@
 import React, { useRef, useState } from "react";
-import FixCategory from "../components/categories/FixCategory";
-import ImprovementCategory from "../components/categories/ImprovementCategory";
-import NewCategory from "../components/categories/NewCategory";
-import Fix from "../components/tags/Fix";
-import New from "../components/tags/New";
-import Update from "../components/tags/Update";
 import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
+import { useNavigate, useParams } from "react-router";
+import { changelogList } from "../assets/data";
+import Tag from "../components/Tag";
 
 function ChangelogDetails() {
   const [showCategory, setShowCategory] = useState(false);
   const categoryRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
+  const { changelogId } = useParams();
 
-  const handleClickOutside = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
-    if (categoryRef.current && !categoryRef.current.contains(event.target as Node)) {
-        setShowCategory(false);
-    }  
-  }
+  const changelog = changelogList.find(
+    (item) => item.id.toString() === changelogId
+  );
+
+  const handleClickOutside = (
+    event: React.MouseEvent<HTMLDivElement, MouseEvent>
+  ) => {
+    if (
+      categoryRef.current &&
+      !categoryRef.current.contains(event.target as Node)
+    ) {
+      setShowCategory(false);
+    }
+  };
 
   return (
-    <div className="w-[30rem] border-0 rounded-md shadow-lg p-5" onClick={handleClickOutside}>
+    <div
+      className="w-[30rem] border-0 rounded-md shadow-lg p-5"
+      onClick={handleClickOutside}
+    >
       <div className="flex justify-center">
         <div className="mr-auto">
           <ArrowBackIosNewIcon
-            style={{ fontSize: "small", marginLeft: "5px" }}
+            style={{ fontSize: "small", marginLeft: "5px", cursor: "pointer" }}
+            onClick={() => navigate(-1)}
           />
         </div>
         <div className="mr-auto">
-          <h3 className="text-blue-600 font-semibold">Lorem ipsum dolor</h3>
+          <h3 className="text-blue-600 font-semibold">{changelog?.title}</h3>
         </div>
       </div>
       <div className="border-[0.5px] my-3"></div>
       <div className="pt-2 mb-4">
         <div className="flex">
-          <Fix />
-          <Update />
-          <New />
+          {changelog?.tags.includes("fix") && (
+            <Tag border="top-right" name="Fix" colour="bg-green-600" />
+          )}
+          {changelog?.tags.includes("update") && (
+            <Tag border="bottom-right" name="Update" colour="bg-red-600" />
+          )}
+          {changelog?.tags.includes("new") && (
+            <Tag name="New" border="top-right" colour="bg-yellow-500" />
+          )}
         </div>
         <div className="text-gray-500 text-sm my-2">
-          <p>
-            Aliquam hac magna eu tincidunt. Interdum condimentum dui quis duis
-            aliquet nunc diam. Lorem ipsum dolor sit, amet consectetur
-            adipisicing elit. Vitae, quae natus, velit error voluptatum dolores
-            hic ducimus fugit, nemo earum aut voluptatem? Est, quo distinctio
-            quasi minus magni illum similique.
-          </p>
+          <p>{changelog?.description}</p>
         </div>
       </div>
       <div className="flex">
@@ -54,9 +66,29 @@ function ChangelogDetails() {
             Banana for scale 🍌
           </h3>
           <div className="flex justify-start">
-            <NewCategory className="w-12 text-[0.7rem] my-1 mx-[2.5px]" />
-            <ImprovementCategory className="w-24 text-[0.7rem] my-1 mx-[2.5px]" />
-            <FixCategory className="w-10 text-[0.7rem] my-1 mx-[2.5px]" />
+            {changelog?.tags.includes("new") && (
+              //   <NewCategory className="w-12 text-[0.7rem] my-1 mx-[2.5px]" />
+              <Tag
+                name="New"
+                colour="bg-blue-500"
+                className="w-12 text-[0.7rem] my-1"
+              />
+            )}
+            {changelog?.tags.includes("update") && (
+              //   <ImprovementCategory className="w-24 text-[0.7rem] my-1 mx-[2.5px]" />
+              <Tag
+                name="Improvement"
+                colour="bg-purple-500"
+                className="w-24 text-[0.7rem] my-1"
+              />
+            )}
+            {changelog?.tags.includes("fix") && (
+              <Tag
+                name="Fix"
+                colour="bg-red-500"
+                className="w-10 text-[0.7rem] my-1"
+              />
+            )}
           </div>
         </div>
         <div className="bg-blue-500 w-[50%] h-20 pl-3 ml-auto">
@@ -86,9 +118,27 @@ function ChangelogDetails() {
           </div>
           {showCategory && (
             <div className="absolute z-30 rounded-md shadow-md bg-white w-24 p-2 mt-[0.1rem]">
-              <FixCategory className="w-8 h-5 text-[0.6rem] my-1" />
-              <ImprovementCategory className="h-5 text-[0.6rem] my-1" />
-              <NewCategory className="w-10 h-5 text-[0.6rem] my-1" />
+              {changelog?.tags.includes("fix") && (
+                <Tag
+                  name="Fix"
+                  colour="bg-blue-500"
+                  className="w-7 h-5 text-[0.55rem] my-1"
+                />
+              )}
+              {changelog?.tags.includes("update") && (
+                <Tag
+                  name="Improvement"
+                  colour="bg-purple-500"
+                  className="h-5 text-[0.55rem] my-1"
+                />
+              )}
+              {changelog?.tags.includes("new") && (
+                <Tag
+                  name="New"
+                  colour="bg-blue-500"
+                  className="w-7 h-5 text-[0.55rem] my-1"
+                />
+              )}
             </div>
           )}
         </div>

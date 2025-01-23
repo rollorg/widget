@@ -1,32 +1,7 @@
 import { Link } from "react-router";
 import Footer from "../components/Footer";
-import Fix from "../components/tags/Fix";
-import New from "../components/tags/New";
-import Update from "../components/tags/Update";
-
-const changelogList = [
-  {
-    id: 1,
-    title: "Lorem ipsum dolor",
-    description:
-      " Aliquam hac magna eu tincidunt. Interdum condimentum dui quis duis aliquet nunc diam. Lorem ipsum dolor sit, amet consectetur adipisicing elit. Vitae, quae natus, velit error voluptatum dolores hic ducimus fugit, nemo earum aut voluptatem? Est, quo distinctio quasi minus magni illum similique.",
-    tags: ["update", "fix"],
-  },
-  {
-    id: 2,
-    title: "Lorem ipsum",
-    description:
-      " Vitae, quae natus, velit error voluptatum dolores hic ducimus fugit, nemo earum aut voluptatem? Est, quo distinctio quasi minus magni illum similique.",
-    tags: ["fix"],
-  },
-  {
-    id: 3,
-    title: "Lorem ipsum dolor",
-    description:
-      " Interdum condimentum dui quis duis aliquet nunc diam. Vitae, quae natus, velit error voluptatum dolores hic ducimus fugit, nemo earum aut voluptatem? Est, quo distinctio quasi minus magni illum similique.",
-    tags: ["new"],
-  },
-];
+import { changelogList } from "../assets/data";
+import Tag from "../components/Tag";
 
 function Changelogs() {
   return (
@@ -37,12 +12,22 @@ function Changelogs() {
         </div>
         <div className="border-[0.5px] my-3"></div>
         {changelogList.map((changelog) => (
-          <div className="h-20 pt-1 mb-4 cursor-pointer">
+          <div key={changelog.id} className="h-20 pt-1 mb-4 cursor-pointer">
             <Link to={`/${changelog.id}`}>
               <div className="flex">
-                {changelog.tags.includes("fix") && <Fix />}
-                {changelog.tags.includes("update") && <Update />}
-                {changelog.tags.includes("new") && <New />}
+                {changelog.tags.includes("fix") && (
+                  <Tag border="top-right" name="Fix" colour="bg-green-600" />
+                )}
+                {changelog.tags.includes("update") && (
+                  <Tag
+                    border="bottom-right"
+                    name="Update"
+                    colour="bg-red-600"
+                  />
+                )}
+                {changelog.tags.includes("new") && (
+                  <Tag name="New" border="top-right" colour="bg-yellow-500" />
+                )}
                 <h4 className="text-gray-800 text-sm mt-2 font-[500]">
                   {changelog.title}
                 </h4>
