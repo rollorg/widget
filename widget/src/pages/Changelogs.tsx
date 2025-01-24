@@ -16,17 +16,22 @@ function Changelogs() {
             <Link to={`/${changelog.id}`}>
               <div className="flex">
                 {changelog.tags.includes("fix") && (
-                  <Tag border="top-right" name="Fix" colour="bg-green-600" />
+                  <Tag
+                    name="Fix"
+                    className="text-xs text-gray-100 bg-green-600 w-auto py-2 px-4 mr-2 rounded-l-full flex justify-center items-center rounded-tr-[15000px]"
+                  />
                 )}
                 {changelog.tags.includes("update") && (
                   <Tag
-                    border="bottom-right"
                     name="Update"
-                    colour="bg-red-600"
+                    className="text-xs text-gray-100 bg-red-600 w-auto py-2 px-4 mr-2 rounded-l-full flex justify-center items-center rounded-br-[15000px]"
                   />
                 )}
                 {changelog.tags.includes("new") && (
-                  <Tag name="New" border="top-right" colour="bg-yellow-500" />
+                  <Tag
+                    name="New"
+                    className="text-xs text-gray-100 bg-yellow-500 w-auto py-2 px-4 mr-2 rounded-l-full flex justify-center items-center rounded-tr-[15000px]"
+                  />
                 )}
                 <h4 className="text-gray-800 text-sm mt-2 font-[500]">
                   {changelog.title}
