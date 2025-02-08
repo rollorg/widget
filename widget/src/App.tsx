@@ -34,7 +34,7 @@ function App() {
       }
     };
     // should be removed when tenantKey is passed from parent window
-    setConfig("impresa_consults_euevB");
+    setConfig("new_org_fyevB");
 
     // notify parent window that widget is ready
     postMessageToListeners({ event: "WIDGET_READY" });
@@ -55,8 +55,8 @@ function App() {
           throw new Error(`Response status: ${res.status}`);
         }
         const data = await res.json();        
-        // setChangelogs(data);
-        setChangelogs(data.filter((changelog: ChangelogInterface) => changelog.tenantKey === config));
+        setChangelogs(data);
+        // setChangelogs(data.filter((changelog: ChangelogInterface) => changelog.tenantKey === config));
       } catch (error) {
         if (error instanceof Error) {
           console.log(`Error message: ${error.message}`);

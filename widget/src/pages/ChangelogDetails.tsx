@@ -14,30 +14,37 @@ function ChangelogDetails({
 }) {
   const [showCategory, setShowCategory] = useState(false);
   const categoryRef = useRef<HTMLDivElement>(null);
+  const hasSentRequest = useRef(false);
   const navigate = useNavigate();
   const { id } = useParams();
 
-  const changelog = changelogs.find(
-    (item) => item._id.toString() === id
-  );
+  const changelog = changelogs.find((item) => item._id.toString() === id);
+
+  const url = import.meta.env.VITE_API_BASE_URL;
 
   useEffect(() => {
     const storeMetadata = async () => {
+        if (hasSentRequest.current) return; // prevents multiple requests
       try {
+        hasSentRequest.current = true;
         const metadata = await getDeviceMetadata();
-        console.log(metadata);
-
         // make API call to store metadata
-        // await fetch("api-endpoint/storeMetadata", {
-        //   method: "POST",
-        //   headers: {
-        //     "Content-Type": "application/json",
-        //   },
-        //   body: JSON.stringify({
-        //     changelogId: changelog?._id,
-        //     metadata,
-        //   }),
-        // });
+        await fetch(`${url}/metadata`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          body: JSON.stringify({
+            changelogId: changelog?._id,
+            userAgent: metadata.userAgent,
+            ip: metadata.ipAddress,
+            language: metadata.language,
+            timeZone: metadata.timeZone,
+            timestamp: new Date().toISOString(),
+            screenSize: metadata.screenSize,
+          }),
+        });
       } catch (error) {
         console.error("Failed to send metadata!", error);
       }
@@ -45,7 +52,7 @@ function ChangelogDetails({
     if (changelog) {
       storeMetadata();
     }
-  }, [changelog]);
+  }, [changelog, url]);
 
   const handleClickOutside = (
     event: React.MouseEvent<HTMLDivElement, MouseEvent>
