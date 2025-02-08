@@ -1,20 +1,51 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import { useNavigate, useParams } from "react-router";
-import { changelogList } from "../assets/data";
 import Tag from "../components/Tag";
+import { ChangelogInterface } from "../utils/types";
+import { getDeviceMetadata } from "../utils/metadata";
 
-function ChangelogDetails() {
+function ChangelogDetails({
+  changelogs,
+}: {
+  changelogs: ChangelogInterface[];
+}) {
   const [showCategory, setShowCategory] = useState(false);
   const categoryRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
-  const { changelogId } = useParams();
+  const { id } = useParams();
 
-  const changelog = changelogList.find(
-    (item) => item.id.toString() === changelogId
+  const changelog = changelogs.find(
+    (item) => item._id.toString() === id
   );
+
+  useEffect(() => {
+    const storeMetadata = async () => {
+      try {
+        const metadata = await getDeviceMetadata();
+        console.log(metadata);
+
+        // make API call to store metadata
+        // await fetch("api-endpoint/storeMetadata", {
+        //   method: "POST",
+        //   headers: {
+        //     "Content-Type": "application/json",
+        //   },
+        //   body: JSON.stringify({
+        //     changelogId: changelog?._id,
+        //     metadata,
+        //   }),
+        // });
+      } catch (error) {
+        console.error("Failed to send metadata!", error);
+      }
+    };
+    if (changelog) {
+      storeMetadata();
+    }
+  }, [changelog]);
 
   const handleClickOutside = (
     event: React.MouseEvent<HTMLDivElement, MouseEvent>
@@ -29,7 +60,7 @@ function ChangelogDetails() {
 
   return (
     <div
-      className="w-[30rem] border-0 rounded-md shadow-lg p-5"
+      className="border-0 rounded-md shadow-lg p-5 md:w-[30rem]"
       onClick={handleClickOutside}
     >
       <div className="flex justify-center">

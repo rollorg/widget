@@ -1,19 +1,27 @@
 import { Link } from "react-router";
 import Footer from "../components/Footer";
-import { changelogList } from "../assets/data";
 import Tag from "../components/Tag";
+import { ChangelogInterface } from "../utils/types";
 
-function Changelogs() {
+function Changelogs({ changelogs }: { changelogs: ChangelogInterface[] }) {
+  if (changelogs.length === 0) {
+    return (
+      <div className="text-bold flex justify-center items-center">
+        <h3>Loading•••</h3>
+      </div>
+    );
+  }
+
   return (
     <>
-      <div className="w-[30rem] border-0 rounded-md shadow-lg p-5">
+      <div className="border-0 rounded-md shadow-lg p-5 md:w-[30rem]">
         <div className="flex justify-center">
           <h3 className="text-blue-600 font-semibold">Recent changes</h3>
         </div>
         <div className="border-[0.5px] my-3"></div>
-        {changelogList.map((changelog) => (
-          <div key={changelog.id} className="h-20 pt-1 mb-4 cursor-pointer">
-            <Link to={`/${changelog.id}`}>
+        {changelogs.map((changelog) => (
+          <div key={changelog._id} className="h-20 pt-1 mb-4 cursor-pointer">
+            <Link to={`/changelogs/${changelog._id}`}>
               <div className="flex">
                 {changelog.tags.includes("fix") && (
                   <Tag
