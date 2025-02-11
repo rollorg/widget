@@ -2,13 +2,14 @@ export type SDKOptions = {
   onSuccess: (data: any) => void;
   onError: (error: Error) => void;
   onClose: () => void;
+  config: Record<string, any>;
 };
 
 export class SDK {
   onSuccess!: SDKOptions["onSuccess"];
   onError!: SDKOptions["onError"];
   onClose!: SDKOptions["onClose"];
-  config!: Record<string, any>;
+  config!: SDKOptions["config"];
 
   constructor({ onSuccess, onError, onClose, ...rest }: SDKOptions) {
     // singleton instance initialization
@@ -78,7 +79,7 @@ export class SDK {
     // when the iframe is loaded, send the config data to the iframe
     iframe.onload = () => {
       iframe.contentWindow?.postMessage(
-        { type: "changelogData", config: this.config },
+        { type: "CHANGELOGS_TENANT_KEY", config: this.config },
         `${process.env.TARGET_ORIGIN}`
       );
 

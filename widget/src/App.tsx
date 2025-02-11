@@ -6,7 +6,7 @@ import { ChangelogInterface } from "./utils/types";
 
 function App() {
   const [changelogs, setChangelogs] = useState<ChangelogInterface[]>([]);
-  const [config, setConfig] = useState('');
+  const [config, setConfig] = useState({});
 
   // const url = import.meta.env.VITE_API_BASE_URL;
   const testUrl = import.meta.env.VITE_API_TEST_URL;
@@ -34,7 +34,10 @@ function App() {
       }
     };
     // should be removed when tenantKey is passed from parent window
-    setConfig("new_org_fyevB");
+    setConfig({
+      url: "http://localhost:5173/changelogs",
+      tenantKey: "new_org_fyevB",
+    });
 
     // notify parent window that widget is ready
     postMessageToListeners({ event: "WIDGET_READY" });
@@ -49,14 +52,14 @@ function App() {
     const fetchChangelogs = async () => {
       // fetch changelogs by tenantKey
       try {
-        // const res = await fetch(`${url}/organisation/${config}`);
+        // const res = await fetch(`${url}/organisation/${config.tenantKey}`);
         const res = await fetch(`${testUrl}`);
         if (!res.ok) {
           throw new Error(`Response status: ${res.status}`);
         }
         const data = await res.json();        
         setChangelogs(data);
-        // setChangelogs(data.filter((changelog: ChangelogInterface) => changelog.tenantKey === config));
+        // setChangelogs(data.filter((changelog: ChangelogInterface) => changelog.tenantKey === config.tenantKey));
       } catch (error) {
         if (error instanceof Error) {
           console.log(`Error message: ${error.message}`);
