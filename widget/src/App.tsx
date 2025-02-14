@@ -31,9 +31,9 @@ function App() {
     const handleMessage = (event: MessageEvent) => {
       if (event.origin !== "http://localhost:3000") return;
 
-      const { type, url, tenantKey } = event.data;
-      if (type === "INIT") {
-        setConfig({ url, tenantKey });
+      const { type, data } = event.data;
+      if (type === "CONFIG") {
+        setConfig({ data });
       }
     };
     // should be removed when tenantKey is passed from parent window
@@ -55,7 +55,7 @@ function App() {
     const fetchChangelogs = async () => {
       // fetch changelogs by tenantKey
       try {
-        // const res = await fetch(`${url}/organisation/${config.tenantKey}`);
+        // const res = await fetch(`${url}/organisation/${config?.config?.tenantKey}`);
         const res = await fetch(`${testUrl}`);
         if (!res.ok) {
           throw new Error(`Response status: ${res.status}`);

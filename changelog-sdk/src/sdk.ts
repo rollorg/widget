@@ -1,13 +1,14 @@
 export type SDKOptions = {
   onError: (error: Error) => void;
   onClose: () => void;
-  config: {HostUrl: string, tenantKey: string};
+  config: { tenantKey: string };
 };
 
 export class SDK {
   onError!: SDKOptions["onError"];
   onClose!: SDKOptions["onClose"];
   config!: SDKOptions["config"];
+  origin!: string;
 
   constructor({ onError, onClose, config }: SDKOptions) {
     // singleton instance initialization
@@ -17,6 +18,7 @@ export class SDK {
     this.onError = onError;
     this.onClose = onClose;
     this.config = config;
+    this.origin = "http://localhost:5173/changelogs"; // to be replaced with actual URL in production
   }
 
   init() {
@@ -53,19 +55,19 @@ export class SDK {
     loader.style.textAlign = "center";
     loader.style.padding = "20px";
     loader.style.fontWeight = "bold";
-    loader.style.color = "white";
     loader.style.height = "100vh";
     loader.style.display = "flex";
     loader.style.alignItems = "center";
     loader.style.justifyContent = "center";
 
+    // append loader to the modal container
     modalContainer.appendChild(loader);
     modalBackdrop.appendChild(modalContainer);
     document.body.appendChild(modalBackdrop);
 
     // create iframe element
     const iframe = document.createElement("iframe");
-    iframe.src = "http://localhost:5173/changelogs"; // to be replaced with actual URL in production
+    iframe.src = this.origin;
 
     iframe.style.width = "100%";
     iframe.style.height = "100%";
@@ -73,10 +75,7 @@ export class SDK {
 
     // when the iframe is loaded, send the config data to the iframe
     iframe.onload = () => {
-      iframe.contentWindow?.postMessage(
-        { type: "INIT", config: this.config },
-        "http://localhost:5173/changelogs" // to be replaced with actual URL in production
-      );
+      iframe.contentWindow?.postMessage({ type: "INIT" }, this.origin);
 
       // remove the loader and show the iframe
       modalContainer.removeChild(loader);
@@ -86,11 +85,12 @@ export class SDK {
 
     // handle iframe loading error
     iframe.onerror = (error) => {
-      loader.textContent = "Error loading the iframe";
+      loader.style.color = "red";
+      loader.textContent = "Error loading the data!";
       console.error(error);
       setTimeout(() => {
         this.#closeIframe();
-      }, 2000);
+      }, 3000);
     };
   }
 
@@ -98,12 +98,16 @@ export class SDK {
   #addMessageListener() {
     window.addEventListener("message", (event) => {
       // check event origin
-      if (event.origin !== process.env.TARGET_ORIGIN) {
-        return;
-      }
-
-      if (event.data?.type === "CLOSE") {
-        this.#closeIframe();
+      if (event.origin !== process.env.TARGET_ORIGIN) return;
+      const { type, data } = event.data;
+      switch (type) {
+        case "WIDGET_READY":
+          this.#sendIframeConfig(data);
+        case "CLOSE":
+          this.#closeIframe();
+          break;
+        default:
+          break;
       }
     });
   }
@@ -117,7 +121,11 @@ export class SDK {
     }
   }
 
-  sendToHost(data: any) {
-    window.parent.postMessage(data, "*");
+  // private method that sends a message to the iframe
+  #sendIframeConfig(data: { tenantKey: string }) {
+    const iframe = document.querySelector("iframe");
+    if (iframe) {
+      iframe.contentWindow?.postMessage({ type: "CONFIG", data }, this.origin);
+    }
   }
 }
