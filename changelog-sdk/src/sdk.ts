@@ -1,26 +1,22 @@
 export type SDKOptions = {
-  onSuccess: (data: any) => void;
   onError: (error: Error) => void;
   onClose: () => void;
-  config: Record<string, any>;
+  config: {url: string, tenantKey: string};
 };
 
 export class SDK {
-  onSuccess!: SDKOptions["onSuccess"];
   onError!: SDKOptions["onError"];
   onClose!: SDKOptions["onClose"];
   config!: SDKOptions["config"];
 
-  constructor({ onSuccess, onError, onClose, ...rest }: SDKOptions) {
+  constructor({ onError, onClose, config }: SDKOptions) {
     // singleton instance initialization
     if (!(this instanceof SDK)) {
-      return new SDK({ onSuccess, onError, onClose, ...rest });
+      return new SDK({ onError, onClose, config });
     }
-    this.onSuccess = onSuccess;
     this.onError = onError;
     this.onClose = onClose;
-    // other configuration
-    this.config = rest;
+    this.config = config;
   }
 
   init() {
@@ -79,7 +75,7 @@ export class SDK {
     // when the iframe is loaded, send the config data to the iframe
     iframe.onload = () => {
       iframe.contentWindow?.postMessage(
-        { type: "CHANGELOGS_TENANT_KEY", config: this.config },
+        { type: "INIT", config: this.config },
         `${process.env.TARGET_ORIGIN}`
       );
 
@@ -102,18 +98,13 @@ export class SDK {
   // private method that listens to messages from the iframe
   #addMessageListener() {
     window.addEventListener("message", (event) => {
-      const { data } = event;
       // check event origin
       if (event.origin !== process.env.TARGET_ORIGIN) {
         return;
       }
 
-      if (event.data?.type === "close") {
+      if (event.data?.type === "CLOSE") {
         this.#closeIframe();
-      }
-      // handle data from sdk
-      if (event.data?.type === "success") {
-        this.onSuccess(data);
       }
     });
   }

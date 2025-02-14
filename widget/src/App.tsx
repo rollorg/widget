@@ -29,15 +29,18 @@ function App() {
   useEffect(() => {
     // listen for tenantKey from parent window
     const handleMessage = (event: MessageEvent) => {
-      if (event.data.type === "CHANGELOGS_TENANT_KEY") {
-        // setConfig(event.data.config?.tenantKey);
+      if (event.origin !== "http://localhost:3000") return;
+
+      const { type, url, tenantKey } = event.data;
+      if (type === "INIT") {
+        setConfig({ url, tenantKey });
       }
     };
     // should be removed when tenantKey is passed from parent window
-    setConfig({
-      url: "http://localhost:5173/changelogs",
-      tenantKey: "new_org_fyevB",
-    });
+    // setConfig({
+    //   url: "http://localhost:5173/changelogs",
+    //   tenantKey: "new_org_fyevB",
+    // });
 
     // notify parent window that widget is ready
     postMessageToListeners({ event: "WIDGET_READY" });
@@ -57,7 +60,7 @@ function App() {
         if (!res.ok) {
           throw new Error(`Response status: ${res.status}`);
         }
-        const data = await res.json();        
+        const data = await res.json();
         setChangelogs(data);
         // setChangelogs(data.filter((changelog: ChangelogInterface) => changelog.tenantKey === config.tenantKey));
       } catch (error) {
@@ -69,7 +72,7 @@ function App() {
       }
     };
     fetchChangelogs();
-  }, [testUrl, config]);  
+  }, [testUrl, config]);
 
   return (
     <>

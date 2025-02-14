@@ -2,9 +2,6 @@ import { SDK } from "./src/sdk";
 
 // initialize the SDK
 const sdk = new SDK({
-  onSuccess: (data) => {
-    console.log("Success callback", data);
-  },
   onError: (error) => {
     console.error("Error callback", error);
   },
@@ -12,7 +9,8 @@ const sdk = new SDK({
     console.log("Close callback");
   },
   config: {
-    // configuration options
+    url: "http://localhost:5173/changelogs",
+    tenantKey: "new_org_fyevB",
   },
 });
 sdk.init();
