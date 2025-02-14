@@ -1,7 +1,7 @@
 export type SDKOptions = {
   onError: (error: Error) => void;
   onClose: () => void;
-  config: {url: string, tenantKey: string};
+  config: {HostUrl: string, tenantKey: string};
 };
 
 export class SDK {
@@ -65,8 +65,7 @@ export class SDK {
 
     // create iframe element
     const iframe = document.createElement("iframe");
-    // iframe.src = this.config.url;
-    iframe.src = "http://localhost:5173/changelogs";
+    iframe.src = "http://localhost:5173/changelogs"; // to be replaced with actual URL in production
 
     iframe.style.width = "100%";
     iframe.style.height = "100%";
@@ -76,7 +75,7 @@ export class SDK {
     iframe.onload = () => {
       iframe.contentWindow?.postMessage(
         { type: "INIT", config: this.config },
-        `${process.env.TARGET_ORIGIN}`
+        "http://localhost:5173/changelogs" // to be replaced with actual URL in production
       );
 
       // remove the loader and show the iframe
