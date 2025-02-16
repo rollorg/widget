@@ -1,21 +1,18 @@
 export type SDKOptions = {
-  onError: (error: Error) => void;
   onClose: () => void;
   config: { tenantKey: string };
 };
 
 export class SDK {
-  onError!: SDKOptions["onError"];
   onClose!: SDKOptions["onClose"];
   config!: SDKOptions["config"];
   origin!: string;
 
-  constructor({ onError, onClose, config }: SDKOptions) {
+  constructor({ onClose, config }: SDKOptions) {
     // singleton instance initialization
     if (!(this instanceof SDK)) {
-      return new SDK({ onError, onClose, config });
+      return new SDK({ onClose, config });
     }
-    this.onError = onError;
     this.onClose = onClose;
     this.config = config;
     this.origin = "http://localhost:5173/changelogs"; // to be replaced with actual URL in production
@@ -97,14 +94,16 @@ export class SDK {
   // private method that listens to messages from the iframe
   #addMessageListener() {
     window.addEventListener("message", (event) => {
-      // check event origin
-      if (event.origin !== process.env.TARGET_ORIGIN) return;
+      // check target origin for security
+      if (event.origin !== this.origin) return;
       const { type, data } = event.data;
       switch (type) {
         case "WIDGET_READY":
           this.#sendIframeConfig(data);
+          break;
         case "CLOSE":
           this.#closeIframe();
+          this.onClose();
           break;
         default:
           break;
@@ -114,7 +113,6 @@ export class SDK {
 
   // private method that closes the iframe
   #closeIframe() {
-    // remove the modal backdrop
     const modalBackdrop = document.querySelector(".sdk-modal-backdrop");
     if (modalBackdrop) {
       document.body.removeChild(modalBackdrop);
