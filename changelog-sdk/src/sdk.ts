@@ -1,21 +1,21 @@
-export type SDKOptions = {
-  onClose: () => void;
-  config: { tenantKey: string };
-};
+// export type SDKOptions = {
+//   onClose: () => void;
+//   // config: { tenantKey: string };
+// };
 
 export class SDK {
-  onClose!: SDKOptions["onClose"];
-  config!: SDKOptions["config"];
+  onClose!: () => void;
+  config!: { tenantKey: string; url: string };
   origin!: string;
 
-  constructor({ onClose, config }: SDKOptions) {
+  constructor(onClose: () => void, config: { tenantKey: string; url: string }) {
     // singleton instance initialization
     if (!(this instanceof SDK)) {
-      return new SDK({ onClose, config });
+      return new SDK(onClose, config);
     }
     this.onClose = onClose;
     this.config = config;
-    this.origin = "http://localhost:5173/changelogs"; // to be replaced with actual URL in production
+    this.origin = "http://localhost:5174"; // to be replaced with actual widget URL in production
   }
 
   init() {
@@ -25,30 +25,33 @@ export class SDK {
 
   // private method that opens the iframe with a provided URL
   #openIframe() {
-    // create the modal backdrop
+    // create or reference elements
     const modalBackdrop = document.createElement("div");
+    const modalContainer = document.createElement("div");
+    const iframe = document.createElement("iframe");
+    const loader = document.createElement("div");
+    loader.textContent = "Loading...";
+
     modalBackdrop.classList.add("sdk-modal-backdrop");
     modalBackdrop.style.position = "fixed";
     modalBackdrop.style.top = "0";
     modalBackdrop.style.left = "0";
     modalBackdrop.style.width = "100%";
     modalBackdrop.style.height = "100%";
-    modalBackdrop.style.backgroundColor = "rgba(0, 0, 0, 0.3)";
+    modalBackdrop.style.backgroundColor = "rgba(0, 0, 0, 0.4)";
     modalBackdrop.style.zIndex = "9999";
     modalBackdrop.style.display = "flex";
     modalBackdrop.style.justifyContent = "center";
     modalBackdrop.style.alignItems = "center";
 
-    // create modal container
-    const modalContainer = document.createElement("div");
-    modalContainer.style.borderRadius = "5px";
+    modalContainer.style.borderRadius = "8px";
     modalContainer.style.position = "relative";
-    modalContainer.style.width = "100%";
-    modalContainer.style.height = "100%";
+    modalContainer.style.background = "white";
+    modalContainer.style.width = "400px";
+    modalContainer.style.height = "600px";
+    modalContainer.style.border = "none";
+    modalContainer.style.boxShadow = "0 4px 12px rgba(0, 0, 0, 0.15)";
 
-    // create loader element
-    const loader = document.createElement("div");
-    loader.textContent = "Loading...";
     loader.style.textAlign = "center";
     loader.style.padding = "20px";
     loader.style.fontWeight = "bold";
@@ -58,37 +61,55 @@ export class SDK {
     loader.style.justifyContent = "center";
 
     // append loader to the modal container
-    modalContainer.appendChild(loader);
+    if (!modalContainer.contains(loader)) {
+      modalContainer.appendChild(loader);
+    }
     modalBackdrop.appendChild(modalContainer);
     document.body.appendChild(modalBackdrop);
 
-    // create iframe element
-    const iframe = document.createElement("iframe");
-    iframe.src = this.origin;
-
-    iframe.style.width = "100%";
-    iframe.style.height = "100%";
-    iframe.style.border = "none";
-
-    // when the iframe is loaded, send the config data to the iframe
-    iframe.onload = () => {
-      iframe.contentWindow?.postMessage({ type: "INIT" }, this.origin);
-
-      // remove the loader and show the iframe
+    // attach event listeners before setting iframe.src
+    iframe.addEventListener("load", () => {
+      if (iframe.contentWindow) {
+        try {
+          this.#sendIframeConfig({
+            tenantKey: this.config.tenantKey,
+            url: this.config.url,
+          });
+          // iframe.contentWindow?.postMessage(
+          //   { type: "INIT", data: this.config },
+          //   this.origin
+          // );
+        } catch (error) {
+          console.log("Error posting message to iframe:", error);
+        }
+      } else {
+        console.log("iframe.contentWindow is not available");
+      }
+    });
+    // remove loader
+    if (modalContainer.contains(loader)) {
       modalContainer.removeChild(loader);
+    }
+    // append iframe element
+    if (!modalContainer.contains(iframe)) {
       modalContainer.appendChild(iframe);
-      modalContainer.style.display = "block";
-    };
-
-    // handle iframe loading error
-    iframe.onerror = (error) => {
+    }
+    modalContainer.style.display = "block";
+    // handle iframe load error
+    iframe.addEventListener("error", (event) => {
       loader.style.color = "red";
       loader.textContent = "Error loading the data!";
-      console.error(error);
+      console.log("error loading iframe:", event);
       setTimeout(() => {
         this.#closeIframe();
       }, 3000);
-    };
+    });
+    // set iframe src and style
+    iframe.src = this.origin;
+    iframe.id = "changelog-widget";
+    iframe.style.width = "100%";
+    iframe.style.height = "100%";
+    iframe.style.border = "none";
   }
 
   // private method that listens to messages from the iframe
@@ -96,23 +117,14 @@ export class SDK {
     window.addEventListener("message", (event) => {
       // check target origin for security
       if (event.origin !== this.origin) return;
-      const { type, data } = event.data;
-      switch (type) {
-        case "WIDGET_READY":
-          this.#sendIframeConfig(data);
-          break;
-        case "CLOSE":
-          this.#closeIframe();
-          this.onClose();
-          break;
-        default:
-          break;
-      }
+      const { type } = event.data;
+      if (type === "CLOSE") this.#closeIframe();
     });
   }
 
   // private method that closes the iframe
   #closeIframe() {
+    this.onClose();
     const modalBackdrop = document.querySelector(".sdk-modal-backdrop");
     if (modalBackdrop) {
       document.body.removeChild(modalBackdrop);
@@ -120,10 +132,10 @@ export class SDK {
   }
 
   // private method that sends a message to the iframe
-  #sendIframeConfig(data: { tenantKey: string }) {
+  #sendIframeConfig(data: { tenantKey: string; url: string }) {
     const iframe = document.querySelector("iframe");
     if (iframe) {
-      iframe.contentWindow?.postMessage({ type: "CONFIG", data }, this.origin);
+      iframe.contentWindow?.postMessage({ type: "INIT", data }, this.origin);
     }
   }
 }

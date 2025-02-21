@@ -2,20 +2,20 @@
  * @jest-environment jsdom
  */
 
-import { SDK, SDKOptions } from "../src/sdk";
+import { SDK } from "../src/sdk";
 
 describe("SDK", () => {
   let sdk: SDK;
-  const sdkOptions: SDKOptions = {
+  const sdkOptions = {
     onClose: jest.fn(),
-    config: { tenantKey: "test-tenant" },
+    config: { tenantKey: "test-tenant", url: "http://my-url.com" },
   };
 
   beforeEach(() => {
     // Clear the document body before each test
     document.body.innerHTML = "";
     // Create a new instance of the SDK
-    sdk = new SDK(sdkOptions);
+    sdk = new SDK(sdkOptions.onClose, sdkOptions.config);
     // For testing, override the origin to a fixed value
     sdk.origin = "http://localhost";
   });
@@ -26,13 +26,15 @@ describe("SDK", () => {
     expect(modal).not.toBeNull();
   });
 
-  test("should handle a WIDGET_READY message from the widget", () => {
+  test("should handle a CLOSE message from the widget", () => {
     sdk.init();
 
     // Simulate receiving a postMessage event from the widget
     const messageEvent = new MessageEvent("message", {
       origin: sdk.origin,
-      data: { type: "WIDGET_READY", data: { tenantKey: "test-tenant" } },
+      data: {
+        type: "CLOSE",
+      },
     });
     window.dispatchEvent(messageEvent);
 
@@ -46,8 +48,18 @@ describe("SDK", () => {
       const postMessageSpy = jest.spyOn(iframe.contentWindow, "postMessage");
       // Dispatch the event again so that the listener calls #sendIframeConfig
       window.dispatchEvent(messageEvent);
+      expect(postMessageSpy).not.toHaveBeenCalledWith(
+        {
+          type: "CLOSE",
+          data: { tenantKey: "test-tenant", url: "http://my-url.com" },
+        },
+        sdk.origin
+      );
+
       expect(postMessageSpy).toHaveBeenCalledWith(
-        { type: "CONFIG", data: { tenantKey: "test-tenant" } },
+        {
+          type: "CLOSE",
+        },
         sdk.origin
       );
       postMessageSpy.mockRestore();
