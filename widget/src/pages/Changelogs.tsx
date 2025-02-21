@@ -2,8 +2,74 @@ import { Link } from "react-router";
 import Footer from "../components/Footer";
 import Tag from "../components/Tag";
 import { ChangelogInterface } from "../utils/types";
+// import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
+import CloseOutlinedIcon from "@mui/icons-material/CloseOutlined";
+import { useEffect, useState } from "react";
 
-function Changelogs({ changelogs }: { changelogs: ChangelogInterface[] }) {
+function Changelogs({
+  config,
+  onDataChange,
+}: {
+  config: { tenantKey: string; url: string };
+  onDataChange: (changelogs: ChangelogInterface[]) => void;
+}) {
+  const [changelogs, setChangelogs] = useState<ChangelogInterface[]>([]);
+
+  // const apiUrl = import.meta.env.VITE_API_BASE_URL;
+  const testUrl = import.meta.env.VITE_API_TEST_URL;
+
+  const postMessageToListeners = ({
+    event,
+    data,
+  }: {
+    event: string;
+    data?: object;
+  }) => {
+    if (window.parent) {
+      window.parent.postMessage({ type: event, data }, config.url);
+    }
+  };
+  // close application handler
+  const handleCloseIframe = () => postMessageToListeners({ event: "CLOSE" });
+
+  useEffect(() => {
+    // execute callback function from parent to send changelogs
+    const sendChangeLogsToParent = () => {
+      if (changelogs.length > 0) {
+        onDataChange(changelogs);
+      }
+    };
+    sendChangeLogsToParent();
+  }, [changelogs, onDataChange]);
+
+  useEffect(() => {
+    const fetchChangelogs = async () => {
+      // fetch changelogs by tenantKey
+      try {
+        // const res = await fetch(`${apiUrl}/organisation/${config?.tenantKey}`);
+        const res = await fetch(`${testUrl}`);
+        if (!res.ok) {
+          throw new Error(`Response status: ${res.status}`);
+        }
+        const data = await res.json();
+        // setChangelogs(data);
+        setChangelogs(
+          data.filter(
+            (changelog: ChangelogInterface) =>
+              changelog.tenantKey === config?.tenantKey
+          )
+        );
+      } catch (error) {
+        if (error instanceof Error) {
+          console.log(`Error message: ${error.message}`);
+        } else {
+          console.log(`Error: ${error}`);
+        }
+      }
+    };
+    fetchChangelogs();
+  }, [testUrl, config]);
+
   if (changelogs.length === 0) {
     return (
       <div className="text-bold flex justify-center items-center">
@@ -13,14 +79,26 @@ function Changelogs({ changelogs }: { changelogs: ChangelogInterface[] }) {
   }
 
   return (
-    <>
-      <div className="border-0 rounded-md shadow-lg p-5 md:w-[30rem]">
-        <div className="flex justify-center">
-          <h3 className="text-blue-600 font-semibold">Recent changes</h3>
+    <div className="flex flex-col border-0 min-h-screen rounded-md shadow-lg p-5 md:w-[30rem]">
+      <div className="flex-1">
+        <div className="flex justify-between">
+          <div>
+            <CloseOutlinedIcon
+              style={{
+                fontSize: "large",
+                marginLeft: "5px",
+                cursor: "pointer",
+              }}
+              onClick={handleCloseIframe}
+            />
+          </div>
+          <div className="mr-28 md:mr-40">
+            <h3 className="text-blue-600 font-semibold">Recent changes</h3>
+          </div>
         </div>
         <div className="border-[0.5px] my-3"></div>
         {changelogs.map((changelog) => (
-          <div key={changelog._id} className="h-20 pt-1 mb-4 cursor-pointer">
+          <div key={changelog._id} className="h-full pt-1 mb-4 cursor-pointer">
             <Link to={`/changelogs/${changelog._id}`}>
               <div className="flex">
                 {changelog.tags.includes("fix") && (
@@ -51,10 +129,10 @@ function Changelogs({ changelogs }: { changelogs: ChangelogInterface[] }) {
             </Link>
           </div>
         ))}
-        <div className="border-[0.5px] my-2"></div>
-        <Footer />
       </div>
-    </>
+      <div className="border-[0.5px] my-2  bottom-0"></div>
+      <Footer />
+    </div>
   );
 }
 

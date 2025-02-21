@@ -67,7 +67,7 @@ function ChangelogDetails({
 
   return (
     <div
-      className="border-0 rounded-md shadow-lg p-5 md:w-[30rem]"
+      className="border-0 min-h-screen rounded-md shadow-lg p-5 md:w-[30rem]"
       onClick={handleClickOutside}
     >
       <div className="flex justify-center">
