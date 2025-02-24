@@ -2,7 +2,6 @@ import { Link } from "react-router";
 import Footer from "../components/Footer";
 import Tag from "../components/Tag";
 import { ChangelogInterface } from "../utils/types";
-// import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
 import CloseOutlinedIcon from "@mui/icons-material/CloseOutlined";
 import { useEffect, useState } from "react";
 
@@ -14,9 +13,10 @@ function Changelogs({
   onDataChange: (changelogs: ChangelogInterface[]) => void;
 }) {
   const [changelogs, setChangelogs] = useState<ChangelogInterface[]>([]);
+  const [metadata, setMetadata] = useState({});
 
-  // const apiUrl = import.meta.env.VITE_API_BASE_URL;
-  const testUrl = import.meta.env.VITE_API_TEST_URL;
+  const apiUrl = import.meta.env.VITE_API_BASE_URL;
+  // const testUrl = import.meta.env.VITE_API_TEST_URL;
 
   const postMessageToListeners = ({
     event,
@@ -32,8 +32,9 @@ function Changelogs({
   // close application handler
   const handleCloseIframe = () => postMessageToListeners({ event: "CLOSE" });
 
+  // execute callback function 'handleChangelogs' from 'App' component
+  // to set the list of changelogs at the parent level to avoid multiple API calls
   useEffect(() => {
-    // execute callback function from parent to send changelogs
     const sendChangeLogsToParent = () => {
       if (changelogs.length > 0) {
         onDataChange(changelogs);
@@ -42,23 +43,23 @@ function Changelogs({
     sendChangeLogsToParent();
   }, [changelogs, onDataChange]);
 
+  // fetch changelogs by tenant key from the API endpoint
+  // via the route '<API_BASE_URL>/organisation/<tenantKey>'
   useEffect(() => {
     const fetchChangelogs = async () => {
       // fetch changelogs by tenantKey
       try {
-        // const res = await fetch(`${apiUrl}/organisation/${config?.tenantKey}`);
-        const res = await fetch(`${testUrl}`);
+        const res = await fetch(
+          `${apiUrl}/changelog/organisation/key/${config?.tenantKey}`
+        );
+        // const res = await fetch(`${testUrl}`);
         if (!res.ok) {
           throw new Error(`Response status: ${res.status}`);
         }
+
         const data = await res.json();
-        // setChangelogs(data);
-        setChangelogs(
-          data.filter(
-            (changelog: ChangelogInterface) =>
-              changelog.tenantKey === config?.tenantKey
-          )
-        );
+        setChangelogs(data.changelogs); // set changelogs
+        setMetadata(data.metadata); // set pagination metadata
       } catch (error) {
         if (error instanceof Error) {
           console.log(`Error message: ${error.message}`);
@@ -68,7 +69,10 @@ function Changelogs({
       }
     };
     fetchChangelogs();
-  }, [testUrl, config]);
+  }, [apiUrl, config]);
+
+  // log pagination metadata to the console
+  console.log("metadata", metadata);
 
   if (changelogs.length === 0) {
     return (
@@ -101,24 +105,30 @@ function Changelogs({
           <div key={changelog._id} className="h-full pt-1 mb-4 cursor-pointer">
             <Link to={`/changelogs/${changelog._id}`}>
               <div className="flex">
-                {changelog.tags.includes("fix") && (
+                {changelog.categories.some(
+                  (category) => category.name === "fix"
+                ) ? (
                   <Tag
                     name="Fix"
                     className="text-xs text-gray-100 bg-green-600 w-auto py-2 px-4 mr-2 rounded-l-full flex justify-center items-center rounded-tr-[15000px]"
                   />
-                )}
-                {changelog.tags.includes("update") && (
+                ) : null}
+                {changelog.categories.some(
+                  (category) => category.name === "update"
+                ) ? (
                   <Tag
                     name="Update"
                     className="text-xs text-gray-100 bg-red-600 w-auto py-2 px-4 mr-2 rounded-l-full flex justify-center items-center rounded-br-[15000px]"
                   />
-                )}
-                {changelog.tags.includes("new") && (
+                ) : null}
+                {changelog.categories.some(
+                  (category) => category.name === "new"
+                ) ? (
                   <Tag
                     name="New"
                     className="text-xs text-gray-100 bg-yellow-500 w-auto py-2 px-4 mr-2 rounded-l-full flex justify-center items-center rounded-tr-[15000px]"
                   />
-                )}
+                ) : null}
                 <h4 className="text-gray-800 text-sm mt-2 font-[500]">
                   {changelog.title}
                 </h4>
