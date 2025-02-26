@@ -6,38 +6,14 @@ import { ChangelogInterface } from "./utils/types";
 
 function App() {
   const [changelogs, setChangelogs] = useState<ChangelogInterface[]>([]);
-  const [config, setConfig] = useState('');
-
-  // const url = import.meta.env.VITE_API_BASE_URL;
-  const testUrl = import.meta.env.VITE_API_TEST_URL;
-
-  const postMessageToListeners = ({
-    event,
-    data,
-  }: {
-    event: string;
-    data?: object;
-  }) => {
-    if (window.parent) {
-      window.parent.postMessage({ type: event, data }, "*");
-    }
-  };
-
-  // close application handler
-  // const handleClose = () => postMessageToListeners({ event: "close" });
+  const [config, setConfig] = useState({ tenantKey: "", url: "" });
 
   useEffect(() => {
-    // listen for tenantKey from parent window
     const handleMessage = (event: MessageEvent) => {
-      if (event.data.type === "CHANGELOGS_TENANT_KEY") {
-        // setConfig(event.data.config?.tenantKey);
-      }
+      const { type, data } = event.data;
+      // listen for events from parent window
+      if (type === "INIT") setConfig(data);
     };
-    // should be removed when tenantKey is passed from parent window
-    setConfig("new_org_fyevB");
-
-    // notify parent window that widget is ready
-    postMessageToListeners({ event: "WIDGET_READY" });
     window.addEventListener("message", handleMessage);
 
     return () => {
@@ -45,35 +21,19 @@ function App() {
     };
   }, []);
 
-  useEffect(() => {
-    const fetchChangelogs = async () => {
-      // fetch changelogs by tenantKey
-      try {
-        // const res = await fetch(`${url}/organisation/${config}`);
-        const res = await fetch(`${testUrl}`);
-        if (!res.ok) {
-          throw new Error(`Response status: ${res.status}`);
-        }
-        const data = await res.json();        
-        setChangelogs(data);
-        // setChangelogs(data.filter((changelog: ChangelogInterface) => changelog.tenantKey === config));
-      } catch (error) {
-        if (error instanceof Error) {
-          console.log(`Error message: ${error.message}`);
-        } else {
-          console.log(`Error: ${error}`);
-        }
-      }
-    };
-    fetchChangelogs();
-  }, [testUrl, config]);  
+  // get changelogs from Changelogs component
+  const handleChangelogs = (changelogList: ChangelogInterface[]) => {
+    setChangelogs(changelogList);
+  };
 
   return (
     <>
       <Routes>
         <Route
-          path="/changelogs"
-          element={<Changelogs changelogs={changelogs} />}
+          path="/"
+          element={
+            <Changelogs config={config} onDataChange={handleChangelogs} />
+          }
         />
         <Route
           path="/changelogs/:id"

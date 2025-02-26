@@ -18,13 +18,13 @@ function ChangelogDetails({
   const navigate = useNavigate();
   const { id } = useParams();
 
-  const changelog = changelogs.find((item) => item._id.toString() === id);
+  const changelog = changelogs.find((item) => item._id.toString() === id);  
 
   const url = import.meta.env.VITE_API_BASE_URL;
 
   useEffect(() => {
     const storeMetadata = async () => {
-        if (hasSentRequest.current) return; // prevents multiple requests
+      if (hasSentRequest.current) return; // prevents multiple requests
       try {
         hasSentRequest.current = true;
         const metadata = await getDeviceMetadata();
@@ -67,7 +67,7 @@ function ChangelogDetails({
 
   return (
     <div
-      className="border-0 rounded-md shadow-lg p-5 md:w-[30rem]"
+      className="border-0 min-h-screen rounded-md shadow-lg p-5 md:w-[30rem]"
       onClick={handleClickOutside}
     >
       <div className="flex justify-center">
@@ -84,6 +84,32 @@ function ChangelogDetails({
       <div className="border-[0.5px] my-3"></div>
       <div className="pt-2 mb-4">
         <div className="flex">
+          {changelog?.categories.some(
+            (category) => category.name === "fix"
+          ) && (
+            <Tag
+              name="Fix"
+              className="text-xs text-gray-100 bg-green-600 w-auto py-2 px-4 mr-2 rounded-l-full flex justify-center items-center rounded-tr-[15000px]"
+            />
+          )}
+          {changelog?.categories.some(
+            (category) => category.name === "update"
+          ) && (
+            <Tag
+              name="Update"
+              className="text-xs text-gray-100 bg-red-600 w-auto py-2 px-4 mr-2 rounded-l-full flex justify-center items-center rounded-br-[15000px]"
+            />
+          )}
+          {changelog?.categories.some(
+            (category) => category.name === "new"
+          ) && (
+            <Tag
+              name="New"
+              className="text-xs text-gray-100 bg-yellow-500 w-auto py-2 px-4 mr-2 rounded-l-full flex justify-center items-center rounded-tr-[15000px]"
+            />
+          )}
+        </div>
+        {/* <div className="flex">
           {changelog?.tags.includes("fix") && (
             <Tag
               name="Fix"
@@ -102,7 +128,7 @@ function ChangelogDetails({
               className="text-xs text-gray-100 bg-yellow-500 w-auto py-2 px-4 mr-2 rounded-l-full flex justify-center items-center rounded-tr-[15000px]"
             />
           )}
-        </div>
+        </div> */}
         <div className="text-gray-500 text-sm my-2">
           <p>{changelog?.description}</p>
         </div>
@@ -113,19 +139,25 @@ function ChangelogDetails({
             Banana for scale 🍌
           </h3>
           <div className="flex justify-start">
-            {changelog?.tags.includes("new") && (
+            {changelog?.categories.some(
+              (category) => category.name === "new"
+            ) && (
               <Tag
                 name="New"
                 className="w-12 text-[0.7rem] my-1 mx-1 bg-blue-500 text-gray-100 rounded-full flex justify-center py-1"
               />
             )}
-            {changelog?.tags.includes("update") && (
+            {changelog?.categories.some(
+              (category) => category.name === "update"
+            ) && (
               <Tag
                 name="Improvement"
                 className="w-24 text-[0.7rem] my-1 mx-1 bg-purple-500 text-gray-100 rounded-full flex justify-center py-1"
               />
             )}
-            {changelog?.tags.includes("fix") && (
+            {changelog?.categories.some(
+              (category) => category.name === "fix"
+            ) && (
               <Tag
                 name="Fix"
                 className="w-10 text-[0.7rem] my-1 mx-1 bg-red-500 text-gray-100 rounded-full flex justify-center py-1"
@@ -160,19 +192,25 @@ function ChangelogDetails({
           </div>
           {showCategory && (
             <div className="absolute z-30 rounded-md shadow-md bg-white w-24 p-2 mt-[0.1rem]">
-              {changelog?.tags.includes("fix") && (
+              {changelog?.categories.some(
+                (category) => category.name === "fix"
+              ) && (
                 <Tag
                   name="Fix"
                   className="w-7 h-5 text-[0.55rem] my-1 bg-red-500 text-gray-100 rounded-full flex justify-center items-center"
                 />
               )}
-              {changelog?.tags.includes("update") && (
+              {changelog?.categories.some(
+                (category) => category.name === "update"
+              ) && (
                 <Tag
                   name="Improvement"
                   className="h-5 text-[0.55rem] my-1 bg-purple-500 text-gray-100 rounded-full flex justify-center items-center"
                 />
               )}
-              {changelog?.tags.includes("new") && (
+              {changelog?.categories.some(
+                (category) => category.name === "new"
+              ) && (
                 <Tag
                   name="New"
                   className="w-7 h-5 text-[0.55rem] my-1 bg-blue-500 text-gray-100 rounded-full flex justify-center items-center"
